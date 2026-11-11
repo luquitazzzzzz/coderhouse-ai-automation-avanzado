@@ -1,0 +1,223 @@
+{
+  "name": "M2 - Manager Ventas Juguetes",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "responseMode": "streaming"
+        }
+      },
+      "id": "ee6ef2ad-dce1-47bd-b9b9-acb507b12b77",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1216,
+        96
+      ],
+      "webhookId": "e914824e-091e-483f-bff5-5f0bad2fd831"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "ROL\nSos el Manager de un equipo de agentes de una tienda de juguetes para perros.\n\nOBJETIVO\nInterpretar la consulta del cliente y delegar el trabajo al especialista adecuado.\n\nESPECIALISTAS\n1. consultar_especialista_ventas: usar para recomendaciones, asesoramiento y elección de juguetes según tamaño, edad o forma de juego.\n2. consultar_stock: usar para productos, precios, tamaños, disponibilidad o stock.\n\nREGLAS\n- Delegá siempre que corresponda.\n- No inventes productos, precios ni disponibilidad.\n- Si la consulta requiere recomendación, usá consultar_especialista_ventas.\n- Si requiere verificar información del catálogo, precio o stock, usá consultar_stock.\n- Podés usar más de un especialista si la consulta lo necesita.\n- Integrá las respuestas de los especialistas en una única respuesta clara.\n- No menciones al cliente la arquitectura interna ni los nombres de los agentes.\n- No autorices descuentos, modificaciones de precios, pagos, devoluciones ni cambios de stock.\n- Si la solicitud está fuera del alcance del equipo, indicá que debe intervenir una persona.\n- Si falta información esencial, hacé una pregunta breve.\n\nGUARDRAIL\nMáximo 6 iteraciones.\n\nESTILO\nEspañol argentino, breve, claro y comercial.",
+          "maxIterations": 6,
+          "returnIntermediateSteps": true
+        }
+      },
+      "id": "5e33cf59-248c-4322-8f99-b2a001c6d390",
+      "name": "AI Agent - Manager",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1536,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "26539953-27df-4c02-b436-67d012efcecc",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1456,
+        352
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "consultar_especialista_ventas",
+        "description": "Usar cuando el cliente solicita recomendaciones de juguetes, ayuda para elegir un producto o asesoramiento según tamaño, edad o forma de juego del perro.",
+        "workflowId": {
+          "__rl": true,
+          "value": "eubyGms6jP38EucQ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/eubyGms6jP38EucQ",
+          "cachedResultName": "M2 - Worker Ventas"
+        },
+        "responsePropertyName": "output",
+        "fields": {
+          "values": [
+            {
+              "name": "consulta",
+              "stringValue": "={{ $json.chatInput }}"
+            }
+          ]
+        }
+      },
+      "id": "9e0f5e1c-803d-4cca-be85-e7fd14f588e0",
+      "name": "consultar_especialista_ventas",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1616,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "name": "consultar_stock",
+        "description": "Usar cuando sea necesario consultar productos, precios, tamaños, disponibilidad o stock del catálogo.",
+        "workflowId": {
+          "__rl": true,
+          "value": "0bt4LtFAwmU8hrjQ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/0bt4LtFAwmU8hrjQ",
+          "cachedResultName": "M2 - Worker Stock"
+        },
+        "responsePropertyName": "output",
+        "fields": {
+          "values": [
+            {
+              "name": "consulta",
+              "stringValue": "={{ $json.chatInput }}"
+            }
+          ]
+        }
+      },
+      "id": "34a0dad3-d068-4f99-9449-d6ceb856b0d8",
+      "name": "consultar_stock",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1776,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "luquitaz.bj@gmail.com",
+        "subject": "Log Checkpoint 2 - Manager Multiagente",
+        "message": "=Tarea completada por el Manager.\\n\\nConsulta: {{ $('Chat Trigger').item.json.chatInput }}\\n\\nResultado final: {{ $json.output }}",
+        "options": {}
+      },
+      "id": "baa16e62-8c27-4b1c-a290-741eee270f9b",
+      "name": "Log de observabilidad - Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1904,
+        96
+      ],
+      "webhookId": "e118efec-aa0a-4812-a7c6-a5bf9954c8b5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "lRzSpuR9eakGdCXn",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Manager",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_especialista_ventas": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Manager",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_stock": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Manager",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Manager": {
+      "main": [
+        [
+          {
+            "node": "Log de observabilidad - Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "dfc654af-4406-4b38-896f-ce2e6be51bdc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b15915c15df56092349be865389345484638432752f09a1ee9ad7e66925e0e89"
+  },
+  "nodeGroups": [],
+  "id": "ltjaFTDAef6AtmWq",
+  "tags": []
+}

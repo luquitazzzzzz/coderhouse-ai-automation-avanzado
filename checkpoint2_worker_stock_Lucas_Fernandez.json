@@ -1,0 +1,150 @@
+{
+  "name": "M2 - Worker Stock",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "consulta"
+            }
+          ]
+        }
+      },
+      "id": "2efddf6e-6b1d-4f21-a5f0-c05821e997a9",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.consulta }}",
+        "options": {
+          "systemMessage": "ROL\nSos el especialista de catálogo y stock de una tienda de juguetes para perros.\n\nOBJETIVO\nResponder consultas sobre productos, precios, tamaños y disponibilidad usando únicamente la planilla de catálogo.\n\nREGLAS\n- Consultá siempre la herramienta de catálogo antes de responder.\n- No inventes productos, precios ni stock.\n- Si un producto tiene stock 0, indicá que no está disponible.\n- Si la consulta no identifica claramente el producto o dato buscado, pedí una aclaración breve.\n- No modifiques precios, descuentos ni stock.\n- Si la información no está en la planilla, indicá que debe revisarla una persona.\n- Respondé en español argentino, breve y claro.\n\nSALIDA\nRespondé únicamente con la respuesta final para el cliente.",
+          "maxIterations": 6,
+          "returnIntermediateSteps": false
+        }
+      },
+      "id": "581c2a2e-731a-476a-8b53-b7fd19652969",
+      "name": "AI Agent - Worker Stock",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "0f781167-d87d-4bff-a9fc-1a582e8977f9",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        240
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Fuente de verdad del catálogo. Consultar para productos, precios, tamaños y stock disponible.",
+        "documentId": {
+          "__rl": true,
+          "value": "=https://docs.google.com/spreadsheets/d/15hsqgfm6kD1owCWWrI3h7_sgeayD4Z6R7M6u1XhTDyg/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Productos",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "1008ff19-2a65-405c-aeff-da3e4bfb9fca",
+      "name": "Consultar catálogo y stock",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REaO5fdKolIB21zs",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Worker Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Worker Stock",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar catálogo y stock": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Worker Stock",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d660d32d-e755-4dda-9a5a-4eb6ad548f87",
+  "meta": {
+    "instanceId": "b15915c15df56092349be865389345484638432752f09a1ee9ad7e66925e0e89"
+  },
+  "nodeGroups": [],
+  "id": "0bt4LtFAwmU8hrjQ",
+  "tags": []
+}
