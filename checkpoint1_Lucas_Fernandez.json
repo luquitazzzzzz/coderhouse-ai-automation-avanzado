@@ -1,0 +1,183 @@
+{
+  "name": "Checkpoint 1 - Agente Ventas Juguetes para Perros",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "responseMode": "streaming"
+        }
+      },
+      "id": "3614a733-0b02-45e2-8d57-e7ab172156d9",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "b4ddc627-7cb4-4c49-9e22-ae42c8f65d28"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "ROL\nEres un Asistente de Ventas de una tienda de juguetes para perros.\n\nÁMBITO\nTu función es atender consultas comerciales, comprender qué necesita el cliente y recomendar productos disponibles según tamaño del perro, edad, tipo de juego y necesidad indicada.\nNo debes inventar productos, precios ni stock. Cuando necesites información de catálogo o disponibilidad, debes usar la herramienta Consultar catálogo y stock.\n\nOBJETIVO\nResolver consultas simples de clientes y recomendar hasta 3 opciones adecuadas utilizando únicamente información disponible en la herramienta de catálogo.\n\nREGLAS DE USO DE HERRAMIENTAS\n1. Usa la herramienta Consultar catálogo y stock cuando el cliente pregunte por productos, disponibilidad, precio, tamaño o recomendaciones.\n2. No afirmes que un producto está disponible si no lo verificaste.\n3. Si faltan datos importantes para recomendar, realiza una pregunta breve antes de continuar.\n4. No inventes información que no esté disponible en las herramientas.\n\nGUARDRAILS Y ESCALAMIENTO\n1. No tienes autorización para modificar precios, crear descuentos, confirmar pagos, gestionar devoluciones ni realizar cambios de stock.\n2. Si el cliente solicita una acción fuera de tu alcance, indica que el caso debe ser revisado por una persona.\n3. Si no puedes obtener información confiable desde las herramientas, no adivines: deriva la consulta a revisión humana.\n4. Mantén respuestas breves, claras y comerciales, sin presionar al cliente.",
+          "maxIterations": 6,
+          "returnIntermediateSteps": true
+        }
+      },
+      "id": "5e5c4db0-e730-464d-85d2-a468afd3e40f",
+      "name": "AI Agent - Ventas",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "3f83dae9-69a7-4eb0-b75a-2f4a5aecdf4f",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        240
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consultar el catálogo de productos y el stock disponible. Usa esta herramienta cuando el cliente pregunte por juguetes, precios, disponibilidad, tamaños o solicite una recomendación. La fuente de verdad para producto, precio y stock es esta planilla.",
+        "documentId": {
+          "__rl": true,
+          "value": "=https://docs.google.com/spreadsheets/d/15hsqgfm6kD1owCWWrI3h7_sgeayD4Z6R7M6u1XhTDyg/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Productos",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "e6ff55f5-96a5-4069-a4f2-f21c61ebeda9",
+      "name": "Consultar catálogo y stock",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REaO5fdKolIB21zs",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "luquitaz.bj@gmail.com",
+        "subject": "Log Checkpoint 1 - Agente de Ventas",
+        "message": "=Tarea completada por el agente de ventas.\\n\\nConsulta: {{ $('Chat Trigger').item.json.chatInput }}\\n\\nResultado del agente: {{ $json.output }}",
+        "options": {}
+      },
+      "id": "9351ecd5-f833-40b3-9dec-1b3defe3d429",
+      "name": "Log de observabilidad - Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        0
+      ],
+      "webhookId": "6e0a1b15-1af2-4b90-950b-5e551b9ae228",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "lRzSpuR9eakGdCXn",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Ventas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Ventas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar catálogo y stock": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Ventas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Ventas": {
+      "main": [
+        [
+          {
+            "node": "Log de observabilidad - Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "00cbaf3a-79fa-4207-9d00-487c7d9379ed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b15915c15df56092349be865389345484638432752f09a1ee9ad7e66925e0e89"
+  },
+  "nodeGroups": [],
+  "id": "ltjaFTDAef6AtmWq",
+  "tags": []
+}
